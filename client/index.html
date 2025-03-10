@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voxel Dungeon Crawler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 1000;
+        }
+        
+        #loading-bar {
+            width: 300px;
+            height: 20px;
+            background-color: #333;
+            margin-top: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        #loading-progress {
+            height: 100%;
+            width: 0%;
+            background-color: #4a9eff;
+            transition: width 0.3s;
+        }
+        
+        #login-screen, #character-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 900;
+        }
+        
+        .form-container {
+            background-color: #222;
+            padding: 30px;
+            border-radius: 10px;
+            width: 400px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            color: white;
+        }
+        
+        .form-container h2 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background-color: #333;
+            color: white;
+        }
+        
+        .button {
+            background-color: #4a9eff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .button:hover {
+            background-color: #3a7edf;
+        }
+        
+        .character-list {
+            margin-bottom: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .character-card {
+            background-color: #333;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .character-card:hover, .character-card.selected {
+            background-color: #444;
+        }
+        
+        .character-card h3 {
+            margin-bottom: 5px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background-color: #333;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .tab.active {
+            background-color: #4a9eff;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <h1>Voxel Dungeon Crawler</h1>
+        <div id="loading-bar">
+            <div id="loading-progress"></div>
+        </div>
+        <p id="loading-text">Loading...</p>
+    </div>
+    
+    <div id="login-screen">
+        <div class="form-container">
+            <h2>Login</h2>
+            <div class="tabs">
+                <div class="tab active" data-tab="login">Login</div>
+                <div class="tab" data-tab="register">Register</div>
+            </div>
+            <div class="tab-content active" id="login-tab">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter password">
+                </div>
+                <button class="button" id="login-button">Login</button>
+                <p id="login-error" style="color: red; margin-top: 10px;"></p>
+            </div>
+            <div class="tab-content" id="register-tab">
+                <div class="form-group">
+                    <label for="reg-username">Username</label>
+                    <input type="text" id="reg-username" placeholder="Choose a username">
+                </div>
+                <div class="form-group">
+                    <label for="reg-email">Email</label>
+                    <input type="email" id="reg-email" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Password</label>
+                    <input type="password" id="reg-password" placeholder="Choose a password">
+                </div>
+                <div class="form-group">
+                    <label for="reg-confirm">Confirm Password</label>
+                    <input type="password" id="reg-confirm" placeholder="Confirm password">
+                </div>
+                <button class="button" id="register-button">Register</button>
+                <p id="register-error" style="color: red; margin-top: 10px;"></p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="character-screen">
+        <div class="form-container">
+            <h2>Characters</h2>
+            <div class="tabs">
+                <div class="tab active" data-tab="select">Select Character</div>
+                <div class="tab" data-tab="create">Create Character</div>
+            </div>
+            <div class="tab-content active" id="select-tab">
+                <div class="character-list" id="character-list">
+                    <!-- Character cards will be added here -->
+                </div>
+                <button class="button" id="select-character-button">Select Character</button>
+                <p id="select-error" style="color: red; margin-top: 10px;"></p>
+            </div>
+            <div class="tab-content" id="create-tab">
+                <div class="form-group">
+                    <label for="char-name">Character Name</label>
+                    <input type="text" id="char-name" placeholder="Enter character name">
+                </div>
+                <div class="form-group">
+                    <label for="char-class">Class</label>
+                    <select id="char-class">
+                        <option value="Warrior">Warrior</option>
+                        <option value="Mage">Mage</option>
+                        <option value="Archer">Archer</option>
+                        <option value="Cleric">Cleric</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="birthstone-one">First Birthstone</label>
+                    <select id="birthstone-one">
+                        <option value="Ruby">Ruby (Damage +10%)</option>
+                        <option value="Sapphire">Sapphire (Energy +15%)</option>
+                        <option value="Diamond">Diamond (Health +12%)</option>
+                        <option value="Emerald">Emerald (Cooldown -8%)</option>
+                        <option value="Amethyst">Amethyst (Energy Regen +20%)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="birthstone-two">Second Birthstone</label>
+                    <select id="birthstone-two">
+                        <option value="Ruby">Ruby (Damage +10%)</option>
+                        <option value="Sapphire">Sapphire (Energy +15%)</option>
+                        <option value="Diamond">Diamond (Health +12%)</option>
+                        <option value="Emerald">Emerald (Cooldown -8%)</option>
+                        <option value="Amethyst">Amethyst (Energy Regen +20%)</option>
+                    </select>
+                </div>
+                <button class="button" id="create-character-button">Create Character</button>
+                <p id="create-error" style="color: red; margin-top: 10px;"></p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="bundle.js"></script>
+</body>
+</html>
