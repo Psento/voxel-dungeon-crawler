@@ -4,32 +4,65 @@ import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockCont
 import { VoxelRenderer } from './voxel-renderer';
 
 export class GameClient {
+  // In client/game/index.js
   constructor() {
-    this.scene = null;
-    this.camera = null;
-    this.renderer = null;
-    this.controls = null;
-    this.voxelRenderer = null;
-    
-    this.player = {
-      position: new THREE.Vector3(0, 10, 0),
-      velocity: new THREE.Vector3(0, 0, 0),
-      onGround: false
-    };
-    
-    this.keys = {
-      forward: false,
-      backward: false,
-      left: false,
-      right: false,
-      jump: false
-    };
-    
-    this.lastTime = 0;
-    
-    this.init();
-  }
+  this.scene = null;
+  this.camera = null;
+  this.renderer = null;
+  this.controls = null;
+  this.voxelRenderer = null;
   
+  this.player = {
+    position: new THREE.Vector3(0, 10, 0),
+    velocity: new THREE.Vector3(0, 0, 0),
+    onGround: false
+  };
+  
+  this.keys = {
+    forward: false,
+    backward: false,
+    left: false,
+    right: false,
+    jump: false
+  };
+  
+  this.lastTime = 0;
+  
+  // Connection state will be provided by ConnectionManager
+  this.connectionState = {
+    isConnected: false,
+    token: null,
+    characterId: null
+  };
+  
+  this.init();
+}
+setupRenderer() {
+  // Implementation as above
+}
+
+setupScene() {
+  this.scene = new THREE.Scene();
+}
+
+setupLighting() {
+  // Add ambient light
+  const ambientLight = new THREE.AmbientLight(0x404040);
+  this.scene.add(ambientLight);
+  
+  // Add directional light
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+  directionalLight.position.set(1, 1, 0.5).normalize();
+  this.scene.add(directionalLight);
+}
+
+setupControls() {
+  this.camera = new THREE.PerspectiveCamera(
+    75, window.innerWidth / window.innerHeight, 0.1, 1000
+  );
+  this.controls = new PointerLockControls(this.camera, document.body);
+}
+
   init() {
     this.setupRenderer();
     this.setupScene();

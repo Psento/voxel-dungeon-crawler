@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const config = require('../../config');
 const { PartySystem } = require('./party-manager');
 const { InstanceManager } = require('./instance-manager');
-const { Character } = require('../database/models/character');
+const Character = require('../database/models/character');
 
 function createWorldServer(httpServer) {
   const io = socketIO(httpServer, {

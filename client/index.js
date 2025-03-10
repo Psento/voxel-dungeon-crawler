@@ -4,6 +4,7 @@ import io from 'socket.io-client';
 import { GameClient as VoxelGameClient } from './game/index';
 import { ChatSystem } from './game/chat-system';
 import { GameNetwork } from './game/network';
+import './app.js';
 
 class GameClient {
   constructor() {
@@ -172,23 +173,37 @@ class GameClient {
   }
   
   connectToGameServer() {
-    this.updateLoadingStatus('Connecting to game server...', 50);
-    
-    // Configure socket connection
-    this.socket = io({
-      path: '/socket.io',
-      auth: {
-        token: this.connectionState.token,
-        characterId: this.connectionState.characterId
-      },
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000
-    });
-    
-    // Socket event handlers
-    this.setupSocketEventHandlers();
-  }
+      this.updateLoadingStatus('Connecting to game server...', 50);
+      
+      // First ensure we have authentication credentials
+      if (!this.connectionState.token || !this.connectionState.characterId) {
+        console.error('Authentication credentials required');
+        this.updateLoadingStatus('Authentication failed. Please log in again.', 0);
+        return;
+      }
+      
+      // Configure socket connection
+      this.socket = io({
+        path: '/socket.io',
+        auth: {
+          token: this.connectionState.token,
+          characterId: this.connectionState.characterId
+        },
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
+      });
+      
+      // Connect to world server
+      this.network = new GameNetwork(this);
+      this.network.connect(
+        this.connectionState.token,
+        this.connectionState.characterId
+      );
+      
+      // Socket event handlers
+      this.setupSocketEventHandlers();
+    }
   
   setupSocketEventHandlers() {
     this.socket.on('connect', () => {
