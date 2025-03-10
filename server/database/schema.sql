@@ -1,9 +1,10 @@
 -- schema.sql
+-- Ensure UUID extension is available
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Accounts table
 CREATE TABLE IF NOT EXISTS accounts (
-  account_id UUID PRIMARY KEY,
+  account_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   username VARCHAR(32) UNIQUE NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
@@ -13,7 +14,7 @@ CREATE TABLE IF NOT EXISTS accounts (
 
 -- Characters table
 CREATE TABLE IF NOT EXISTS characters (
-  character_id UUID PRIMARY KEY,
+  character_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   account_id UUID NOT NULL REFERENCES accounts(account_id),
   name VARCHAR(32) NOT NULL,
   class VARCHAR(32) NOT NULL,
@@ -34,7 +35,7 @@ CREATE TABLE IF NOT EXISTS characters (
 
 -- Item inventory
 CREATE TABLE IF NOT EXISTS items (
-  item_id UUID PRIMARY KEY,
+  item_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   template_id VARCHAR(64) NOT NULL,
   owner_id UUID NOT NULL REFERENCES characters(character_id),
   name VARCHAR(64) NOT NULL,
@@ -50,7 +51,7 @@ CREATE TABLE IF NOT EXISTS items (
 
 -- Friendships
 CREATE TABLE IF NOT EXISTS friendships (
-  friendship_id UUID PRIMARY KEY,
+  friendship_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   requester_id UUID NOT NULL REFERENCES accounts(account_id),
   recipient_id UUID NOT NULL REFERENCES accounts(account_id),
   status VARCHAR(16) NOT NULL DEFAULT 'pending',
@@ -61,7 +62,7 @@ CREATE TABLE IF NOT EXISTS friendships (
 
 -- Guilds
 CREATE TABLE IF NOT EXISTS guilds (
-  guild_id UUID PRIMARY KEY,
+  guild_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name VARCHAR(32) UNIQUE NOT NULL,
   description TEXT,
   leader_id UUID NOT NULL REFERENCES accounts(account_id),
@@ -80,17 +81,17 @@ CREATE TABLE IF NOT EXISTS guild_members (
 
 -- Guild invites
 CREATE TABLE IF NOT EXISTS guild_invites (
-  invite_id UUID PRIMARY KEY,
+  invite_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   guild_id UUID NOT NULL REFERENCES guilds(guild_id),
   account_id UUID NOT NULL REFERENCES accounts(account_id),
   inviter_id UUID NOT NULL REFERENCES accounts(account_id),
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create indexes
-CREATE INDEX idx_characters_account_id ON characters(account_id);
-CREATE INDEX idx_items_owner_id ON items(owner_id);
-CREATE INDEX idx_friendships_requester_id ON friendships(requester_id);
-CREATE INDEX idx_friendships_recipient_id ON friendships(recipient_id);
-CREATE INDEX idx_guild_members_account_id ON guild_members(account_id);
-CREATE INDEX idx_guild_invites_account_id ON guild_invites(account_id);
+-- Indexes (using IF NOT EXISTS)
+CREATE INDEX IF NOT EXISTS idx_characters_account_id ON characters(account_id);
+CREATE INDEX IF NOT EXISTS idx_items_owner_id ON items(owner_id);
+CREATE INDEX IF NOT EXISTS idx_friendships_requester_id ON friendships(requester_id);
+CREATE INDEX IF NOT EXISTS idx_friendships_recipient_id ON friendships(recipient_id);
+CREATE INDEX IF NOT EXISTS idx_guild_members_account_id ON guild_members(account_id);
+CREATE INDEX IF NOT EXISTS idx_guild_invites_account_id ON guild_invites(account_id);

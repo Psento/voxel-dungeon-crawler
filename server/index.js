@@ -5,21 +5,24 @@ const { initializeDatabase } = require('./database');
 
 async function startServer() {
   try {
+    // Use environment port or default to 3000
+    const PORT = process.env.PORT || 3000;
+    
     // Initialize database connection
     console.log('Initializing database connection...');
     await initializeDatabase();
     console.log('Database connection established.');
     
     // Start web server
-    console.log('Starting web server...');
+    console.log(`Starting web server on port ${PORT}...`);
     const webServer = createWebServer();
-    webServer.listen(config.server.port, () => {
-      console.log(`Web server listening on port ${config.server.port}`);
+    const server = webServer.listen(PORT, () => {
+      console.log(`Web server listening on port ${PORT}`);
     });
     
     // Start world server (using same HTTP server for socket.io)
     console.log('Starting world server...');
-    const worldServer = createWorldServer(webServer.server);
+    const worldServer = createWorldServer(server);
     console.log('World server started.');
     
     // Handle graceful shutdown
@@ -31,7 +34,7 @@ async function startServer() {
         process.exit(1);
       }, 10000); // 10 seconds grace period
       
-      webServer.close(() => {
+      server.close(() => {
         console.log('Web server closed.');
         worldServer.close(() => {
           console.log('World server closed.');

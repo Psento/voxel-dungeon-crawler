@@ -2,7 +2,7 @@
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
-const config = require('../config');
+const config = require('../../config');
 
 async function seed() {
   // Create database connection

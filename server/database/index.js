@@ -1,9 +1,8 @@
 // server/database/index.js
 const { Pool } = require('pg');
+const fs = require('fs');
+const path = require('path');
 const config = require('../../config');
-
-// Create connection pool
-let pool;
 
 // Connection pool configuration
 const poolConfig = {
@@ -25,6 +24,34 @@ const poolConfig = {
   }
 };
 
+// Create connection pool
+let pool;
+
+async function createTablesIfNotExist(client) {
+  try {
+    // Read schema file
+    const schemaPath = path.join(__dirname, 'schema.sql');
+    const schema = fs.readFileSync(schemaPath, 'utf8');
+    
+    // Execute schema SQL, ignoring already-exists errors
+    try {
+      await client.query(schema);
+      console.log('Database tables verified/created successfully');
+    } catch (error) {
+      // Check if error is something other than "relation already exists"
+      if (error.code !== '42P07') {
+        console.error('Error creating database tables:', error);
+        throw error;
+      } else {
+        console.log('Indexes and tables already exist. Continuing...');
+      }
+    }
+  } catch (error) {
+    console.error('Error reading schema file:', error);
+    throw error;
+  }
+}
+
 async function initializeDatabase() {
   if (pool) return pool;
   
@@ -40,10 +67,11 @@ async function initializeDatabase() {
     // Test connection
     const client = await pool.connect();
     console.log('Connected to database successfully');
-    client.release();
     
     // Check if tables exist, create them if not
-    await createTablesIfNotExist();
+    await createTablesIfNotExist(client);
+    
+    client.release();
     
     return pool;
   } catch (error) {
@@ -52,7 +80,7 @@ async function initializeDatabase() {
   }
 }
 
-// Monitor pool statistics (for debugging and performance monitoring)
+// Function to get pool statistics
 function getPoolStats() {
   if (!pool) return null;
   
@@ -82,6 +110,7 @@ async function withTransaction(callback) {
   }
 }
 
+// Export database-related functions
 module.exports = {
   initializeDatabase,
   pool: () => pool,
